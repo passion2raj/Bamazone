@@ -1,5 +1,5 @@
 var mysql = require("mysql");
-var inquirer = ("inquirer");
+var inquirer = require("inquirer");
 
 
 // connection 
@@ -15,14 +15,17 @@ connection.connect(function (err) {
     console.log(" Connected as Id" + connection.threadId + "\n");
     afterConnection();
 });
+
+  var productChosen = null;
 function afterConnection() {
     connection.query("SELECT * from products", function (err, res) {
         if (err) throw err;
         console.table(res);
-        connection.end();
+        //connection.end();
+        userPrompt();
     });
-}
-function userprompt() {
+};
+function userPrompt() {
     inquirer.prompt([
         {
             type: "Input",
@@ -90,9 +93,11 @@ function userprompt() {
             default:
                 console.log("\n Invalid input, please try again \n");
                 userPrompt();
+                
         };
     });
-}
+
+};
 
 function userQuantity() {
     connection.query('SELECT * FROM products', function (err, res) {
@@ -102,34 +107,35 @@ function userQuantity() {
                 name: 'quantity',
                 message: 'How many would you like to purchase?'
             }
-        ]).then(function (answer) {
-           // var chosenProduct = productChosen;
-            var chosenQuantity = answer.quantity;
-            connection.query('SELECT * FROM products WHERE item_id=?', [chosenQuantity], function (err, res) {
-                if (err) throw err;
-                if (chosenQuantity > res[0].stock_quantity) {
-                    console.log('\nOut of stock, sorry for the inconvenience\n')
-                    userPrompt()
-                } else {
-                    var updatedStock = res[0].stock_quantity - chosenQuantity;
-                    query = 'UPDATE products SET ? WHERE ?';
-                    connection.query('SELECT * FROM products WHERE item_id=?',
-                        [
-                            { stock_quantity: updatedStock },
-                            { item_id: chosenProduct }
-                        ],
-                        function (err, res) {
-                            if (err) throw err;
-                            connection.end();
-                        });
-                    var totalCost = chosenQuantity * res[0].price;
-                    var totalCostOwed = totalCost.toFixed(2);
+        ])
+            .then(function (answer) {
+                var chosenProduct = productChosen;
+                var chosenQuantity = answer.quantity;
+                connection.query('SELECT * FROM products WHERE item_id=?', [chosenQuantity], function (err, res) {
+                    if (err) throw err;
+                    if (chosenQuantity > res[0].stock_quantity) {
+                        console.log('\nOut of stock, sorry for the inconvenience\n')
+                        userPrompt()
+                    } else {
+                        var updatedStock = res[0].stock_quantity - chosenQuantity;
+                        query = 'UPDATE products SET ? WHERE ?';
+                        connection.query('SELECT * FROM products WHERE item_id=?',
+                            [
+                                { stock_quantity: updatedStock },
+                                { item_id: chosenProduct }
+                            ],
+                            function (err, res) {
+                                if (err) throw err;
+                                connection.end();
+                            });
+                        var totalCost = chosenQuantity * res[0].price;
+                        var totalCostOwed = totalCost.toFixed(2);
 
-                    console.log('\nOrder successful!\nYour total cost is $' + totalCostOwed + '\nThanks for shopping with Bamazon!\n')
+                        console.log('\nOrder successful!\nYour total cost is $' + totalCostOwed + '\nThanks for shopping with Bamazon!\n')
 
-                }
+                    }
+                })
+
             })
-
-        })
     })
 }
