@@ -30,63 +30,61 @@ function userPrompt() {
         {
             type: "Input",
             name: "product",
-            message: "Please input the item ID number that you are interested in purching "
+            message: "Please enter  the item ID of product you want to buy "
         }
     ]).then(function (userRes) {
         productChosen = userRes.product
         switch (userRes.product) {
-            case "1": console.log("\n Thank you for your selection\n you have chosen iphone 7")
-                userQuantity();
+            case "1": console.log("\n Thank you for your selection\n you have chosen iphone 7\n")
+                shopping();
                 break;
             case '2': console.log('\nThank you for your selection\nYou have chosen i phone 8\n');
-                userQuantity();
+                shopping();
                 break;
-
-
             case '3':
                 console.log('\nThank you for your selection\nYou have chosen Levis Jeans\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '4':
                 console.log('\nThank you for your selection\nYou have chosen Nike Track pant\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '5': console.log('\nThank you for your selection\nYou have chosen Think and grow Rich\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '6':
                 console.log('\nThank you for your selection\nYou have chosen The Secrets\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '7':
                 console.log('\nThank you for your selection\nYou have chosen G - shock watch\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '8':
                 console.log('\nThank you for your selection\nYou have chosen Citizen watch\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '9':
                 console.log('\nThank you for your selection\nYou have chosen Vitamix mixture\n');
-                userQuantity();
+                shopping();
                 break;
 
 
             case '10':
                 console.log('\nThank you for your selection\nYou have chosen Chefs knife set \n');
-                userQuantity();
+                shopping();
                 break;
 
 
@@ -99,8 +97,8 @@ function userPrompt() {
 
 };
 
-function userQuantity() {
-    connection.query('SELECT * FROM products', function (err, res) {
+function shopping() {
+    connection.query('SELECT * FROM products',productChosen, function (err, res) {
         inquirer.prompt([
             {
                 type: 'input',
@@ -109,9 +107,10 @@ function userQuantity() {
             }
         ])
             .then(function (answer) {
-                var chosenProduct = productChosen;
-                var chosenQuantity = answer.quantity;
-                connection.query('SELECT * FROM products WHERE item_id=?', [chosenQuantity], function (err, res) {
+                var chooseProduct = productChosen;
+                var chosenQuantity = parseInt(answer.quantity);
+                connection.query('SELECT * FROM products WHERE item_id=?', [productChosen], function (err, res) {
+                   
                     if (err) throw err;
                     if (chosenQuantity > res[0].stock_quantity) {
                         console.log('\nOut of stock, sorry for the inconvenience\n')
@@ -119,17 +118,20 @@ function userQuantity() {
                     } else {
                         var updatedStock = res[0].stock_quantity - chosenQuantity;
                         query = 'UPDATE products SET ? WHERE ?';
-                        connection.query('SELECT * FROM products WHERE item_id=?',
+                        connection.query(query,
                             [
                                 { stock_quantity: updatedStock },
-                                { item_id: chosenProduct }
+                                { item_id: chooseProduct }
                             ],
                             function (err, res) {
                                 if (err) throw err;
                                 connection.end();
                             });
-                        var totalCost = chosenQuantity * res[0].price;
+                        var totalCost = parseInt(chosenQuantity * res[0].price);
+
                         var totalCostOwed = totalCost.toFixed(2);
+                        
+                        
 
                         console.log('\nOrder successful!\nYour total cost is $' + totalCostOwed + '\nThanks for shopping with Bamazon!\n')
 
